@@ -1,8 +1,8 @@
 class Plateau:
     def __init__(self,joueur:bool,sizex=10,sizey=10):
         self.__isplayer=joueur
-        self.__grid=[]
-        self.__discovered=[[False for _ in range(sizex)]for _ in range(sizey)]
+        self.__grid:list[Plateau]=[]
+        self.__visible=[[-1 for _ in range(sizex)] for _ in range(sizey)]
         self.__sizex=sizex
         self.__sizey=sizey
         self.__flottemanquante={2:1,3:2,4:1,5:1} #size:amount
@@ -21,20 +21,50 @@ class Plateau:
         new=Ship()
         new.place(emplacements)
         self.__grid.append(new)
-
-
+    @property
+    def sizex(self):
+        return self.__sizex
+    @property
+    def sizey(self):
+        return self.__sizey
+    def test(self,emplacement):
+        """Retourne l'état visible d'une case"""
+        return self.__visible[emplacement[0]][emplacement[1]]
+    def discover(self,emplacement):
+        """Decouvre le vrai etat d'une case et le retourne"""
+        for i in range(len(self.__grid)):
+            attaque=self.__grid[i].attack(emplacement)
+            if attaque==1:
+                self.__visible[emplacement[0]][emplacement[1]]=1
+                return 1
+            elif attaque==2:
+                for coule in self.__grid[i].placement:
+                    self.__visible[coule[0]][coule[1]]=2
+                return 2
+        self.__visible[coule[0]][coule[1]]=0
+        return 0
 class Ship:
     def __init__(self):
-        self.placement=None
+        self.__placement=None
     def place(self,places:list[list[int,int]]):
-        self.placement=places
+        self.__placement=places
+        self.__intacts=[[places[i],True] for i in range(len(places))]
     @property
     def placement(self):
-        return self.placement
+        return self.__placement
     @property
     def size(self):
-        return len(self.placement)
-    
+        return len(self.__placement)
+    def attack(self,emplacement):
+        for i in range(len(self.__placement)):
+            if emplacement==self.__placement[i]:
+                for j in range(len(self.__intacts)):
+                    if self.__intacts[j][0]==self.__placement[i]:
+                        self.__intacts[j][1]=True
+                        if all(self.__intacts[k] for k in range(len(self.__intacts))):
+                            return 2
+                        return 1
+        return 0
 test=Ship()
 test.placement=5
 """
